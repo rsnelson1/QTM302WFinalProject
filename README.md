@@ -2,7 +2,7 @@
 *Binder Badge*
 (We'll See if we do)
 
-* Winni Weng and Ruth Nelson at Emory University *
+Winni Weng and Ruth Nelson at Emory University
 
 *Objectives:*
 This project aims to address 
