@@ -1,20 +1,21 @@
 # QTM302W:Sex and Covid Mortality Disparities
+*Binder Badge*
+(We'll See if we do)
 
-##Binder Badge (We'll see if we do)
+*Winni Weng and Ruth Nelson at Emory University*
 
-##Winni Weng and Ruth Nelson at Emory University
+*Objectives:*
+This project aims to address 
 
-##Objectives: This project aims to address 
+*Methods*
 
-##Methods
+*Platforms and Languages*
 
-##Platforms and Languages
+*Project Description*
 
-##Project Description
+*Instructions For Getting Started*
 
-##Instructions For Getting Started
+*Directory Structure*
 
-##Directory Structure
-
-##Contact Information: 
+*Contact Information:* 
 Winni Weng (wweng7@emory.edu) and Ruth Nelson (rsnelso@emory.edu)
