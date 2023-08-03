@@ -1,5 +1,4 @@
 # QTM302W:Sex and Covid Mortality Disparities
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/rsnelson1/QTM302WFinalProject.git/HEAD)
 
 ### Winni Weng and Ruth Nelson at Emory University
 
@@ -7,9 +6,10 @@
 This project aims to investigate whether Covid mortality rates differ based on Sex and whether they hold true regionally and overtime. 
 
 ## Methods
+The data used in the research project is collected by the Centers for Disease Control's (CDC) National Center for Health Statistics (NCHS) and accessed from the their website under "Provisional Covid-19 Deaths by Sex and Age". Before analyzing the data, the data was "cleaned" to enhance its usability. The observations under "New York City" were combined with "New York" state, the 16 age range groups were refactored to fall under 5 groups (infant, child, young adult, adult, and senior), and an additional "seasons" column was generated based on the months. Along with our visulizations, the project utilized methods including ANOVA tests and t-tests to determine the statistical significance of our findings. The null hypotheses were rejected if the p-values were less than 0.05. 
 
 ## Platforms and Languages
-This project is performed in R using tidyverse, plotly, and usmap packages. 
+This project is performed in R version 4.0.3 using tidyverse, plotly, and usmap packages. 
 
 - Tidyverse: A system of packages for data manipulation, exploration, and visulization. 
 - Plotly: A package that creates interactive web-based graphs. 
