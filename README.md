@@ -1,4 +1,4 @@
-# QTM302W:Sex and Covid Mortality Disparities
+# QTM302W: Sex and Covid Mortality Disparities
 
 ### Winni Weng and Ruth Nelson at Emory University
 
