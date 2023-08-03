@@ -1,7 +1,7 @@
 # QTM302W:Sex and Covid Mortality Disparities
 ## Binder Badge
 
-## Winni Weng and Ruth Nelson at Emory University
+### Winni Weng and Ruth Nelson at Emory University
 
 ## Objectives:
 This project aims to investigate whether Covid mortality rates differ based on Sex and whether they hold true regionally and overtime. 
