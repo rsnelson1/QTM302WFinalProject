@@ -30,7 +30,7 @@ This project explores a dataset, "Provisional Covid-19 Deaths by Sex and Age", p
 **5) Work with Project:** Now that the R environment contains all the required packages and data, you can analyze, visualize, and manipulate the data in the repository. 
 
 ## Directory Structure
-![image](<img width="421" alt="Screen Shot 2023-08-02 at 9 15 04 PM" src="https://github.com/rsnelson1/QTM302WFinalProject/assets/139489541/3b3d6e24-27c3-4ec3-8792-dcc68380fec4">)
+![Image]()
 
     
 ## Contact Information: 
