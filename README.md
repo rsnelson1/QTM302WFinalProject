@@ -1,5 +1,5 @@
 # QTM302W:Sex and Covid Mortality Disparities
-## Binder Badge
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/rsnelson1/QTM302WFinalProject.git/HEAD)
 
 ### Winni Weng and Ruth Nelson at Emory University
 
