@@ -1,0 +1,247 @@
+---
+title: "EDA Project"
+author: "Winni Weng and Ruth Nelson"
+date: '2023-07-19'
+output: html_document
+---
+
+```{r, message=FALSE, warning=FALSE}
+#loaded packages
+library(tidyverse)
+library(usmap)
+library(plotly)
+#loaded dataset
+covid<-read.csv("data/Provisional_COVID-19_Deaths_by_Sex_and_Age.csv")
+```
+# Exploratory Data Analysis
+
+## Introduction
+Since 2020, covid has impacted billions of people worldwide. It has infected and killed millions of people and caused unprecedented shutdowns. In order to anticipate and prevent future SARS-virus-related outbreaks, we must first better understand the COVID-19 pandemic. Specifically, how the disease has progressed in a given population and which demographics are more vulnerable to Covid.
+
+For this project, we have decided to use a dataset, called “Provisional COVID-19 Deaths by Sex and Age”, developed by the Centers for Disease Control(CDC) to investigate Covid death rates throughout the United States. This data spans over 3 years, since January 1, 2020, and is updated weekly on the CDC’s website. It includes information regarding the deaths due to Covid, Pneumonia, and Influenza. These death counts are grouped based on individual U.S. states and territories in addition to the U.S. as a whole; by age group; and by sex. Each row represents the data pertaining to death counts of an individual state for a specific month or year. There is also a column for “Group” which denotes whether the individual row represents data at the month level, year level, or “By Total” which includes all-time Covid deaths. Additionally, there are “Start” and “End” dates which show the time window represented by the data, and a “Date As Of” which tells the viewer the date that the data was last updated on the CDC’s website. This segment of code and its output below will show a sample of the data and its variables. 
+
+```{r}
+sample_n(covid, 10)
+```
+
+In this exploratory data analysis, we will focus on Covid deaths and examine several types of trends in our data; we will examine how COVID-19 death tolls vary based on year and month, as well as state, age group, and sex. We will create intuitive visualizations for all of these metrics such that readers will be able to easily understand trends in the data. Overall, this analysis is aimed to clearly show trends in several facets of COVID-19 death tolls in the past few years. Notably, for each individual observation, individual sub-datasets were created to best investigate a given trend.
+
+## Distribution and Overview of Data
+To examine the overall distribution of covid deaths month-by-month, we create a new data frame in which we only include the rows which give data by month, for all sexes, for all ages, and for the United States as a whole. We then see that the range of total covid deaths in a single month by a single state is 0-20,065. Next, we look at the distribution of COVID-19 deaths for each month using the hist() function. From this, we can see that for the vast majority of the months from 2020-2023, there have been less than 2500 monthly deaths in each state. This observation is again seen using the boxplot() function to examine the distribution of this variable.
+
+Another aspect of the dataset we want to visualize is the total death count in the United States by year. To do this we first eliminate data from 2023 (as this data is incomplete because we are only halfway through the year), we then used the filter() function to include only rows that include data at the year level. We then group by Year, such that each row within the same year regardless of state will be considered together. Finally, we use the summarize function to add all data points within a year together and look at the total deaths by year. The tabular output above shows that 2021 had the highest death toll by Covid with 4294258 deaths, and 2022 had the lowest with 2183637 deaths.
+```{r, message=FALSE}
+#created a new dataframe to show monthly death distributions
+month_deaths <- covid %>% 
+  filter(Group =="By Month", Sex == "All Sexes", Age.Group == "All Ages", State != "United States")
+
+#using range to find most and least covid deaths within a single month in a single state
+range(month_deaths$COVID.19.Deaths, na.rm=T)
+
+#histogram to show total covid deaths per month overall distribution
+hist(month_deaths$COVID.19.Deaths)
+#boxplot to show distribution of the number of total covid deaths per month, with upper limit of 3000 for better insight
+boxplot(month_deaths$COVID.19.Deaths, ylim=c(0,3000))
+
+#calculating total Covid deaths for each year excluding 2023
+covid%>%
+  filter(Year!=2023, Group!="By Group", Group!="By Month")%>%
+  group_by(Year)%>%
+  summarize(covid_death_yr=sum(COVID.19.Deaths, na.rm=T))
+```
+## Data Cleaning
+To "clean" the data for better usability for this analysis and project, we recorded "New York" to include the observations in "New York City" as we are interested in analyzing covid mortality on a state-to-state basis. In addition, while reviewing the literature we find that there are strong correlations between seasons and age with covid mortality. The data gives the "Age" variable using 16 different age group categories, with certain age ranges overlapping. To make this easier to visualize and use in future manipulations we recoded the age variable into 5 new categories, infant, child, young adult, adult, and senior. Given months, we created another variable "seasons" and organized months to fall into the seasons, winter, spring, fall, and summer. 
+```{r, message=FALSE}
+#combined new york and new york city observations into one response "New York"
+covid$State[covid$State=="New York City"]<-'New York'
+
+
+#creating a new varibale and refactoring months into seasons
+covid$seasons<-factor(covid$Month, levels = c("summer", "fall", "spring", "winter"))
+covid$seasons[covid$Month<=2|covid$Month==12]<-"winter"
+covid$seasons[covid$Month>=6 & covid$Month<=8]<-"summer"
+covid$seasons[covid$Month>=9 & covid$Month<=11]<-"fall"
+covid$seasons[covid$Month>=3 & covid$Month<=5]<-"spring"
+
+#using the function month.abb to turn the numerical months (1,2,3...) into the months name abbreviation (Jan, Feb...)
+covid$month_name<-month.abb[covid$Month]
+
+#refactoring age ranges into (teenager, adult, senior, child, infant, young adult)
+covid$age<-factor(covid$Age.Group, levels=c("infant", "child", "young adult", "adult", "senior", "overall"))
+covid$age[covid$Age.Group=="65-74 years"|covid$Age.Group=="75-84 years"|covid$Age.Group=="85 years and over"]<-"senior"
+covid$age[covid$Age.Group=="55-64 years"|covid$Age.Group=="30-39 years"|covid$Age.Group=="35-44 years"|covid$Age.Group=="45-54 years"|covid$Age.Group=="40-49 years"|covid$Age.Group=="50-64 years"]<-"adult"
+covid$age[covid$Age.Group=="Under 1 year"]<-"infant"
+covid$age[covid$Age.Group=="1-4 years"|covid$Age.Group=="0-17 years"|covid$Age.Group=="5-14 years"]<-"child"
+covid$age[covid$Age.Group=="18-29 years"|covid$Age.Group=="15-24 years"|covid$Age.Group=="25-34 years"]<-"young adult"
+covid$age[covid$Age.Group=="All Ages"]<-"overall"
+
+```
+
+## Data Visualization and Analysis
+### Covid Mortality by State
+After cleaning the data, we wanted to investigate which state had the highest total number of Covid deaths since the start of the pandemic. To do this we generated a table that shows the total Covid deaths for each state using several tidy functions and arrange them such that the highest death toll is first. From this, we can see that California, Texas, and Florida have the highest death tolls due to Covid. This makes sense, as these are the 3 most populous states in the U.S. To present this data in a visually intuitive manner, we created a choropleth map. First, we create a new data frame called "choro" which shows the total covid deaths by each individual state. The choropleth map output above visualizes the total number of covid deaths with red indicating a higher number of total Covid deaths and blue indicating a lower number of total Covid deaths. From this visualization, we can clearly see that again, California and Texas have the highest overall death tolls due to COVID (again consistent with their high populations).
+
+```{r, warning=F}
+#calculated total(all years) covid deaths for each stateand arranged them in descending order
+covid%>%
+  filter(Age.Group=="All Ages", Sex=="All Sexes", State!="United States")%>%
+  group_by(State)%>%
+  summarize(total_covid_death=sum(COVID.19.Deaths, na.rm=T))%>%
+  arrange(desc(total_covid_death))
+
+#created a new dataframe "choro" containing observations of interest to use in choropleth map
+choro<-covid%>%
+  filter(Age.Group=="All Ages", Sex=="All Sexes", State!="United States")%>%
+  group_by(State)%>%
+  summarize(total_covid_death=sum(COVID.19.Deaths, na.rm=T))%>%
+  mutate(state=State)
+
+#created choropleth map showing amount of covid deaths per state
+plot_usmap(data = choro, values = "total_covid_death", color = "red") + 
+  scale_fill_continuous(low="darkblue", high="red", name = "Number of Covid Deaths per State", label = scales::comma) + 
+  theme(legend.position = "right")
+```
+
+### Covid Mortality and Age and Sex
+Next, we aimed to investigate and visualize the total death counts due to covid, not only by state but also by age group and Sex. Using our newly created variable "Age" which intuitively defined age groups. We then created a new data frame in which each column is an individual age group and sex, and there is data present on the total covid deaths for that specific group. To visualize this data we created a ploty interactive barplot which displays the total covid deaths by each age group, further grouped by sex. From this, we can see that the vast majority of covid deaths were adults and seniors. Furthermore, among all age groups, there are more male deaths than female deaths. 
+```{r, ,message=FALSE}
+#created another new dataframe "covid_age" to use for following chart
+covid_age<-covid%>%
+  filter(State=="United States", Sex=="Male"| Sex=="Female", age!="overall")%>%
+  group_by(age, Sex)%>%
+  summarize(total_covid_deaths=sum(COVID.19.Deaths, na.rm=T))
+
+#created a bargraph to show the deaths due to covid within each age group & gender
+agevsdeath<-ggplot(covid_age, aes(fill=Sex, y=total_covid_deaths, x=age)) + 
+  geom_bar(position=position_dodge(), stat="identity")+
+  labs(x="Age Group", y="Total Covid Deaths", title="Total Covid Deaths by Age")
+
+#created an interactive plot from the ggplot above (covid deaths vs age & gender)
+ggplotly(agevsdeath)
+```
+
+### Covid mortality by Months/Seasons
+Next, we wanted to investigate how the Covid death metric varied across the months of the year and seasons. Using the new variable, "month_name", which has the name of each month name instead of the number of each month denoted by covid$Month. We visualized this data in a bar chart, which each month represented by one bar. From this, we can see that January and December had the highest death tolls due to covid. It appears that the colder winter months generally had higher death toll rates due to covid. Based on these findings we wanted to investigate the death tolls by season, to see if we saw differences. To do this we created a new column to designate each observation into a specific season and created the barplot above, From this we see as we expected, that winter has the highest covid death toll by a wide margin, followed by fall.
+
+```{r,warning=FALSE}
+#created a bargraph to show the total covid deaths per month
+covid%>%
+  filter(State=="United States",Age.Group=="All Ages", Sex=="All Sexes", Group!="By Total", Group!="By Year")%>%
+  mutate(month_name=factor(month_name, levels=month.abb))%>%
+  ggplot(aes(x=month_name, y=COVID.19.Deaths))+
+  geom_col()+
+  labs(title="Number of All Time Covid Deaths by Month", x="Month", y="Number of Covid Deaths")
+
+#created a bargraph to show the total covid deaths per season
+covid%>%
+  filter(Group!="By Total", Group!="By Year")%>%
+  ggplot(aes(x=seasons, y=COVID.19.Deaths, fill=seasons))+
+  geom_col()+
+  labs(title="Number of All Time Covid Deaths by Season",x="Seasons", y="Number of Covid Deaths")
+```
+
+
+# Final Project
+*some refereces will be made to the visuals and manipulations made in the Exploratory Data Analysis* 
+In the Exploratory Data Analysis aboved, we examined many metrics of this data set including the Covid death toll by year, month, and season, as well as state. We also looked at how the covid death toll varies by age group and sex. There appeared to be a drastic difference between males and females across all age categories which sparked our interest and influenced the following questions we wanted to ask in our research project: Is the difference in COVID-19 rate between females and male significant and are these findings consistent across age groups? How do these death rates change over the course of the pandemic? Does this phenomenon differ by state? By analyzing this dataset, we will address these questions and potentially elucidate Covid mortality disparities between different demographics. 
+
+### The Difference in Covid Mortality Rate Between Sexes
+First, we wanted to see whether there was a difference between the rates of male and female covid deaths on a state level. To do this we created an interactive choropleth map that focused on showing the percentage of male death rates in the United States. As you hovered over an individual state, this map displayed the state's abbreviation code, total female deaths, total male deaths, percentage of male deaths, percentage of female deaths, and total covid deaths. From this, we interestingly saw that the "western" states appear to have a higher rate of male deaths than the "eastern" states. From here we created two tables, one showing the top 10 states with the highest percentage of male deaths, and the other showing the top 10 states with the lowest percentage of male deaths. To address what statistically may be behind the rate difference in these states, we created a six-state sample with 2 states with the lowest percentages, 2 with the highest, and 2 states in the middle. What we saw was that the states that had the lowest percentage of male covid deaths had a smaller death rate disparity within the senior age category, meaning that there was a similar number of senior males and females that died of Covid rather than having much more male deaths.
+```{r}
+#created a new dataframe to base following interactive map on
+geo_covid<-covid%>%
+  filter(Age.Group=="All Ages", Sex=="Male"|Sex=="Female", State!="United States", Group!="By Total")%>%
+  group_by(State,Sex)%>%
+  summarize(total_covid_death=sum(COVID.19.Deaths, na.rm=T))%>%
+  mutate(code=state.abb[match(State, state.name)])%>%
+  pivot_wider(names_from = "Sex", values_from="total_covid_death")%>%
+  mutate(percent_male=round(100*Male/(Female+Male)))%>%
+  mutate(percent_female=round(100*Female/(Female+Male)))%>%
+  mutate(total_death=Female+Male)
+
+#created an interactive map showing number of covid deaths per state throughout the years
+plot_geo(data=geo_covid, locationmode='USA-states')%>%
+  add_trace(locations=~code, 
+            z=~percent_male,
+            text=~paste("State:", code, "<br>", 
+                        "Female Deaths:", Female, "<br>", 
+                        "Male Deaths:", Male, "<br>", 
+                        "Percent Male Deaths(%):", percent_male, "<br>", 
+                        "Percent Female Deaths(%):", percent_female, "<br>", 
+                        "Total Covid Deaths:", total_death))%>%
+  colorbar(title="Number of Covid Deaths")%>%
+  layout(title="2020-2022 US Covid Deaths by State", geo=list(scope='usa'))
+
+#top 10 states with greatest percent male death
+geo_covid%>%
+  arrange(desc(percent_male))
+#top 10 states with lowest percent male death
+geo_covid%>%
+  arrange(percent_male)
+
+#taking 2 states with the greatest percentage of male deaths, 2 with the lowest, and 2 in the middle and placing them into a new dataset
+state_age<-covid%>%
+  filter(State=="Nevada"|State=="Utah"|State=="Connecticut"|State=="Massachusetts"|State=="South Carolina"|State=="Tennessee", Sex=="Male"| Sex=="Female", age!="overall")%>%
+  group_by(age, Sex, State)%>%
+  summarize(total_covid_deaths=sum(COVID.19.Deaths, na.rm=T))
+
+#creating mulitple bargraphs to see which age group is most effected in the states with a higher percentage of male covid deaths
+plotly_age_state<-ggplot(state_age, aes(fill=Sex, y=total_covid_deaths, x=age)) + 
+  geom_bar(position=position_dodge(), stat="identity")+
+  facet_wrap(~State)+
+  labs(x="Age Group", y="Total Covid Deaths", title="Total Covid Deaths by Age")
+
+ggplotly(plotly_age_state)
+
+```
+
+### Applying Sex differences across Seasons and Years
+To expand on some of the previous analysis from the EDA, we are now comparing the differnce in covid mortality between males and females across seasons and throughout the course of the pandemic, over years. 
+```{r, warning=FALSE}
+#creating a double bar chart to compare male and female covid deaths in different seasons
+covid%>%
+  filter(Group=="By Month", Sex!="All Sexes")%>%
+  ggplot(aes(x=seasons, y=COVID.19.Deaths, fill=Sex))+
+  geom_col(position=position_dodge(), stat="identity")+
+  labs(title="Number of All Time Covid Deaths by Season",x="Seasons", y="Number of Covid Deaths")
+
+#creating a double bar chart to compare male and female covid deaths throughout the years
+covid%>%
+  filter(Group=="By Year", Sex!="All Sexes")%>%
+  ggplot(aes(x=Year, y=COVID.19.Deaths, fill=Sex))+
+  geom_col(position=position_dodge(), stat="identity")+
+  labs(title="Number of All Time Covid Deaths by Year",x="year", y="Number of Covid Deaths")
+```
+
+### Tests of Statisical Significance 
+To determine whether each variable or the interaction between two variables were statistically significant, we ran statistical tests. 
+
+*Anova 1 (sex and age):* a two way ANOVA was performed on the chart above comparing the interaction of sex and age on Covid mortality. A two-way ANOVA assesses if a continuous variable, covid deaths, varies significantly by two categorical variables, sex and age. From the results, it can be seen that both sex and age have significant effects on total covid deaths with respective p-values of 0.008 and 2*10^-16 which indicates that the differences due to both age and sex are significant. However, when looking at the interaction term, the p-value of 0.29 suggests that males are not differentially vulnerable to covid mortality at different age ranges.
+
+*Anova 2 (sex and year):* Using another two-way ANOVA to determine the statistical significance of sex and year on covid mortality, we once again determind that the individual variables, sex and year independently are significant in the difference in covid mortality, however the interaction term was once again not significant with a p-value of 0.58
+
+*Anova 3 (sex and season):* There were once again similar findings in the third two-way anova conducted. The the variables independly were significant, yet the interaction between the to were not. 
+
+*T-test (percentage of mortality rates between males and females):* Finally a t-test was conducted on the individual state percentages between male and female covid mortality. This t-test assess if the percentage of male deaths across the states is significally different from 50%, which would account for half of the deaths. The p-value of 2.2e-16 indicates that we can reject the null hyptothesis and conclude that males are dying at higher rates than females due to covid across the United States. 
+```{r}
+#create new dataset for anova
+covid_age1 <- covid %>% filter(State == "United States", Sex != "All Sexes", Group == "By Month", Age.Group != "All Ages")
+
+#first anova investigating deaths by sex and age group
+aov1 <- aov(COVID.19.Deaths ~ Sex + age+ Sex:age, data = covid_age1)
+summary(aov1)
+
+#create factored variable
+covid_age1$Year <- as.factor(covid_age1$Year)
+#second anova looking at covid deaths by sex and year
+aov2<- aov(COVID.19.Deaths ~ Sex + Year+ Sex:Year, data = covid_age1)
+summary(aov2)
+
+#third and final anova looking at deaths by sex and season
+aov3<- aov(COVID.19.Deaths ~ Sex + seasons + Sex:seasons, data = covid_age1)
+summary(aov3)
+
+#conducting a one-way t-test on the percentages of male and female covid mortality rates. 
+t.test(geo_covid$percent_male, geo_covid$percent_female)
+```
+
